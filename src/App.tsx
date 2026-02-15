@@ -18,6 +18,7 @@ import { Product, CartItem } from './types';
 import { calculateInstallment } from './utils/installmentCalculator';
 import { productsApi } from './api/products.api';
 import { authApi } from './api/auth.api';
+import { fetchCsrfToken } from './api/client';
 
 type Page = 'home' | 'credit-check' | 'checkout' | 'admin' | 'banners' | 'category';
 
@@ -124,6 +125,11 @@ export default function App() {
     };
 
     fetchProducts();
+  }, []);
+
+  // Initialize CSRF protection
+  useEffect(() => {
+    fetchCsrfToken().catch(err => console.error('Error initializing CSRF protection:', err));
   }, []);
 
   const handleAddToCart = (product: Product) => {

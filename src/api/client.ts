@@ -21,12 +21,40 @@ export const setAccessToken = (token: string | null) => {
 
 export const getAccessToken = () => accessToken;
 
-// Request interceptor: Add access token to headers
+// CSRF Token Management
+let csrfToken: string | null = null;
+
+export const fetchCsrfToken = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/csrf-token`, {
+            withCredentials: true
+        });
+        csrfToken = response.data.csrfToken;
+        return csrfToken;
+    } catch (error) {
+        console.error('Failed to fetch CSRF token', error);
+        return null;
+    }
+};
+
+// Request interceptor: Add access token and CSRF token to headers
 apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
+    async (config: InternalAxiosRequestConfig) => {
+        // Add Authorization header
         if (accessToken && config.headers) {
             config.headers.Authorization = `Bearer ${accessToken}`;
         }
+
+        // Add CSRF token for mutation requests
+        if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '') && config.headers) {
+            if (!csrfToken) {
+                await fetchCsrfToken();
+            }
+            if (csrfToken) {
+                config.headers['x-csrf-token'] = csrfToken;
+            }
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
