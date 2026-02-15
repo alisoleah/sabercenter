@@ -1,0 +1,353 @@
+// Saber Store Database Schema
+// Supports: SaberStore + Amazon Egypt + Noon marketplace integration
+// Database: Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// USER MANAGEMENT
+// ==========================================
+
+model User {
+  id           String    @id @default(uuid())
+  fullName     String    @map("full_name")
+  phoneNumber  String    @unique @map("phone_number") // Egyptian: 01XXXXXXXXX
+  email        String?   @unique
+  passwordHash String    @map("password_hash")
+  isVerified   Boolean   @default(false) @map("is_verified")
+  governorate  String?   // Cairo, Giza, Alexandria, etc.
+  role         String    @default("customer") // customer, admin, credit_officer
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  profile         Profile?
+  creditLimit     CreditLimit?
+  orders          Order[]
+  contracts       InstallmentContract[]
+
+  @@map("users")
+}
+
+model Profile {
+  id             String    @id @default(uuid())
+  userId         String    @unique @map("user_id")
+  nationalId     String    @unique @map("national_id") // 14 digits
+  scannedIdUrl   String?   @map("scanned_id_url")
+  utilityBillUrl String?   @map("utility_bill_url")
+  monthlySalary  Decimal   @map("monthly_salary") @db.Decimal(10, 2)
+  employer       String
+  address        String?
+  kycStatus      String    @default("Pending") @map("kyc_status") // Pending, Approved, Rejected
+  kycSubmittedAt DateTime? @map("kyc_submitted_at")
+  kycApprovedAt  DateTime? @map("kyc_approved_at")
+  approvedBy     String?   @map("approved_by")
+  rejectionReason String?  @map("rejection_reason")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model CreditLimit {
+  id             String    @id @default(uuid())
+  userId         String    @unique @map("user_id")
+  totalLimit     Decimal   @map("total_limit") @db.Decimal(10, 2)
+  currentBalance Decimal   @default(0) @map("current_balance") @db.Decimal(10, 2)
+  remainingLimit Decimal   @map("remaining_limit") @db.Decimal(10, 2)
+  status         String    @default("Active") // Active, Frozen, Suspended
+  approvedBy     String?   @map("approved_by")
+  approvedAt     DateTime? @map("approved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_limits")
+}
+
+// ==========================================
+// PRODUCT CATALOG
+// ==========================================
+
+model Category {
+  id           String    @id @default(uuid())
+  name         String    @unique
+  icon         String
+  productCount Int       @default(0) @map("product_count")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  sku         String   @unique
+  cashPrice   Decimal  @map("cash_price") @db.Decimal(10, 2)
+  oldPrice    Decimal? @map("old_price") @db.Decimal(10, 2)
+  stockQty    Int      @default(50) @map("stock_qty")
+  brand       String
+  categoryId  String   @map("category_id")
+  warranty    String?  // "2 Years", "5 Years Compressor"
+  rating      Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount Int      @default(0) @map("review_count")
+  specs       Json?    // Flexible specifications (About this item, Features)
+  badges      Json?    // ["0% Interest", "Free Shipping"]
+  imageUrl    String   @map("image_url") // Main image (legacy, for backward compatibility)
+  images      Json?    // Array of image filenames: ["image1.jpg", "image2.jpg", "image3.jpg"]
+  description String?  @db.Text // Detailed product description
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category            Category             @relation(fields: [categoryId], references: [id])
+  orderItems          OrderItem[]
+  marketplaceListings MarketplaceListing[]
+  inventoryLogs       InventoryLog[]
+
+  @@map("products")
+}
+
+
+// ==========================================
+// INSTALLMENT PLANS
+// ==========================================
+
+model InstallmentPlan {
+  id                   String    @id @default(uuid())
+  name                 String    // "Zero Interest - 6 Months"
+  durationMonths       Int       @map("duration_months") // 6, 12, 18, 24
+  interestRate         Decimal   @map("interest_rate") @db.Decimal(5, 2)
+  minDownPayment       Decimal   @map("min_down_payment") @db.Decimal(5, 2)
+  isActive             Boolean   @default(true) @map("is_active")
+  applicableCategories Json?     @map("applicable_categories")
+  promotionalUntil     DateTime? @map("promotional_until")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  contracts InstallmentContract[]
+
+  @@map("installment_plans")
+}
+
+// ==========================================
+// ORDERS & TRANSACTIONS
+// ==========================================
+
+model Order {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  orderNumber     String   @unique @map("order_number") // Auto-generated: ORD-2024-0001
+  orderDate       DateTime @default(now()) @map("order_date")
+  totalAmount     Decimal  @map("total_amount") @db.Decimal(10, 2)
+  status          String   @default("Pending") // Pending, Confirmed, Shipped, Delivered, Cancelled
+  deliveryMethod  String   @map("delivery_method") // delivery, pickup
+  deliveryAddress String?  @map("delivery_address")
+  governorate     String?
+  pickupBranch    String?  @map("pickup_branch")
+  paymentMethod   String   @map("payment_method") // card, fawry, wallet, installment
+  source          String   @default("saberstore") // saberstore, amazon, noon
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user              User                  @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  contract          InstallmentContract?
+  marketplaceOrders MarketplaceOrder[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String   @id @default(uuid())
+  orderId         String   @map("order_id")
+  productId       String   @map("product_id")
+  quantity        Int
+  priceAtPurchase Decimal  @map("price_at_purchase") @db.Decimal(10, 2)
+  warrantyMonths  Int      @map("warranty_months")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model InstallmentContract {
+  id                   String    @id @default(uuid())
+  contractNumber       String    @unique @map("contract_number") // CON-2024-0001
+  orderId              String    @unique @map("order_id")
+  userId               String    @map("user_id")
+  installmentPlanId    String    @map("installment_plan_id")
+  totalFinancedAmount  Decimal   @map("total_financed_amount") @db.Decimal(10, 2)
+  downPaymentAmount    Decimal   @map("down_payment_amount") @db.Decimal(10, 2)
+  monthlyPaymentAmount Decimal   @map("monthly_payment_amount") @db.Decimal(10, 2)
+  startDate            DateTime  @map("start_date")
+  endDate              DateTime  @map("end_date")
+  contractSignedAt     DateTime? @map("contract_signed_at")
+  otpVerified          Boolean   @default(false) @map("otp_verified")
+  otpCodeHash          String?   @map("otp_code_hash") // Hashed OTP for security
+  phoneNumber          String    @map("phone_number")
+  status               String    @default("Active") // Active, Completed, Defaulted, Cancelled
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id])
+  installmentPlan InstallmentPlan   @relation(fields: [installmentPlanId], references: [id])
+  paymentSchedule PaymentSchedule[]
+
+  @@map("installment_contracts")
+}
+
+model PaymentSchedule {
+  id                String    @id @default(uuid())
+  contractId        String    @map("contract_id")
+  installmentNumber Int       @map("installment_number") // 1, 2, 3...
+  dueDate           DateTime  @map("due_date")
+  amount            Decimal   @db.Decimal(10, 2)
+  status            String    @default("Pending") // Pending, Paid, Overdue, Late
+  paidAt            DateTime? @map("paid_at")
+  paidAmount        Decimal?  @map("paid_amount") @db.Decimal(10, 2)
+  lateFee           Decimal?  @map("late_fee") @db.Decimal(10, 2)
+  paymentMethod     String?   @map("payment_method") // card, fawry, wallet
+  transactionId     String?   @map("transaction_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  contract InstallmentContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("payment_schedule")
+}
+
+// ==========================================
+// MARKETPLACE INTEGRATION
+// ==========================================
+
+model MarketplaceChannel {
+  id         String    @id @default(uuid())
+  name       String    @unique // "Amazon Egypt", "Noon", "SaberStore"
+  code       String    @unique // "amazon", "noon", "saberstore"
+  apiKey     String?   @map("api_key") // Encrypted
+  apiSecret  String?   @map("api_secret") // Encrypted
+  isActive   Boolean   @default(true) @map("is_active")
+  lastSyncAt DateTime? @map("last_sync_at")
+  config     Json?     // Additional channel-specific configuration
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  listings      MarketplaceListing[]
+  orders        MarketplaceOrder[]
+  inventoryLogs InventoryLog[]
+
+  @@map("marketplace_channels")
+}
+
+model MarketplaceListing {
+  id           String    @id @default(uuid())
+  productId    String    @map("product_id")
+  channelId    String    @map("channel_id")
+  externalSku  String    @map("external_sku") // Amazon ASIN or Noon SKU
+  externalUrl  String?   @map("external_url")
+  channelPrice Decimal   @map("channel_price") @db.Decimal(10, 2)
+  stockQty     Int       @map("stock_qty") // Stock allocated to this channel
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSyncAt   DateTime? @map("last_sync_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  product Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  channel MarketplaceChannel @relation(fields: [channelId], references: [id])
+
+  @@unique([productId, channelId])
+  @@map("marketplace_listings")
+}
+
+model MarketplaceOrder {
+  id              String    @id @default(uuid())
+  channelId       String    @map("channel_id")
+  externalOrderId String    @unique @map("external_order_id") // Amazon/Noon Order ID
+  orderId         String?   @map("order_id") // Internal SaberStore order ID
+  status          String    // "pending", "imported", "fulfilled", "cancelled"
+  orderData       Json      @map("order_data") // Raw order data from marketplace
+  importedAt      DateTime? @map("imported_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  channel MarketplaceChannel @relation(fields: [channelId], references: [id])
+  order   Order?             @relation(fields: [orderId], references: [id])
+
+  @@map("marketplace_orders")
+}
+
+model InventoryLog {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  channelId String?  @map("channel_id")
+  changeQty Int      @map("change_qty") // +5, -3, etc.
+  reason    String   // "sale", "restock", "sync", "return", "adjustment"
+  reference String?  // Order ID, sync ID, or manual adjustment note
+  beforeQty Int      @map("before_qty")
+  afterQty  Int      @map("after_qty")
+  createdBy String?  @map("created_by") // User ID or "system"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product             @relation(fields: [productId], references: [id])
+  channel MarketplaceChannel? @relation(fields: [channelId], references: [id])
+
+  @@map("inventory_logs")
+}
+
+// ==========================================
+// STORE BRANCHES
+// ==========================================
+
+model StoreBranch {
+  id           String   @id @default(uuid())
+  name         String
+  city         String
+  address      String
+  phone        String
+  workingHours String   @map("working_hours")
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  hasStock     Boolean  @default(true) @map("has_stock")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("store_branches")
+}
+
+// ==========================================
+// PROMOTIONAL BANNERS
+// ==========================================
+
+model Banner {
+  id         String    @id @default(uuid())
+  title      String
+  subtitle   String
+  ctaText    String    @map("cta_text") // "Shop Now", "Learn More"
+  ctaLink    String?   @map("cta_link") // Optional link to category/product
+  imageUrl   String    @map("image_url") // Main banner image
+  bgGradient String    @default("from-[#003366] to-[#004488]") @map("bg_gradient") // Tailwind gradient classes
+  isActive   Boolean   @default(true) @map("is_active")
+  sortOrder  Int       @default(0) @map("sort_order") // Display order (0 = first)
+  startDate  DateTime? @map("start_date") // Optional: when banner becomes active
+  endDate    DateTime? @map("end_date") // Optional: when banner expires
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("banners")
+}

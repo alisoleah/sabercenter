@@ -1,0 +1,417 @@
+Project Name: Saber Store E-Commerce Platform
+Version: 2.0
+Last Updated: December 24, 2024
+Objective: To become the go-to destination for electronics in Egypt by offering flexible installment plans ("Saber Installments") similar to the B.TECH MiniCash model.
+
+===========================================
+1. BRANDING
+===========================================
+
+Brand Identity: Reliable, Family-Oriented, Modern.
+
+Logo Concept: A stylized "S" integrated with a circuit board line or a shield (representing warranty/trust).
+
+Color Scheme:
+- Primary: Royal Blue (#003366) - Trust/Stability
+- Secondary: Golden Yellow (#FF6600) - Premium/Deals
+- Success: Green (#00C851) - Confirmations
+- Background: Light Gray (#F0F4F8) - Clean, modern
+
+===========================================
+2. USER STORIES
+===========================================
+
+These stories are written in the standard format: "As a [Role], I want to [Action], so that [Benefit]."
+
+Epic 1: The Shopper & Discovery
+--------------------------------
+
+US-1.1: Monthly Installment Display ✅ IMPLEMENTED
+As a Shopper, I want to see a "Monthly Installment Price" displayed directly on the product card (e.g., "From 300 EGP/mo"), so I can immediately know if I can afford the item.
+
+Implementation Status: COMPLETED
+- Product cards show monthly payment for 24 months with 0% interest
+- Displayed in EGP currency
+- Prominently highlighted in orange gradient box
+- Example: "Or 1,917 EGP / 24 months - 0% Interest"
+
+US-1.2: Budget Filter ✅ IMPLEMENTED
+As a Shopper, I want to use a "Budget Filter" to see products based on my monthly budget (e.g., "Show items under 500 EGP/month"), so I don't waste time on expensive items.
+
+Implementation Status: COMPLETED
+- BudgetFilter component with dropdown selection
+- Budget ranges: Under 300, 300-500, 500-1000, 1000-2000, 2000-5000 EGP/month
+- Real-time filtering based on 24-month installment calculations
+- Visual feedback showing selected budget
+- Empty state with "Show All Products" option
+
+US-1.3: Product Comparison ✅ IMPLEMENTED
+As a Shopper, I want to compare two products side-by-side specifically comparing their Warranty Terms and Installment Plans, so I can choose the best value.
+
+Implementation Status: COMPLETED
+- Compare up to 3 products simultaneously
+- Side-by-side comparison table showing:
+  * Brand, Price (cash and old price), Warranty
+  * Customer ratings and reviews
+  * Stock availability
+  * Installment plans for 6, 12, 18, 24 months (all in EGP)
+  * Detailed specifications
+- "+ Compare" button on each product card
+- Floating compare bar showing selected products
+- Sticky header for easy navigation
+- Remove products from comparison
+
+Epic 2: The "Saber Installments" System
+----------------------------------------
+
+US-2.1: KYC Document Upload (PARTIAL)
+As a Registered User, I want to upload my National ID and Utility Bill via a secure form, so I can apply for a credit limit without visiting a physical branch.
+
+Implementation Status: PARTIAL - Credit limit checker exists, needs file upload enhancement
+
+US-2.2: Installment Calculator (IMPLEMENTED)
+As a User, I want to use the "Saber Calculator" on the product page to toggle between 6, 12, 18, and 24 months and see the exact interest rate and final price update in real-time.
+
+Implementation Status: COMPLETED
+- Real-time installment calculator
+- Support for 6, 12, 18, 24 month plans
+- 0% interest rate calculations
+- Shows monthly payment and total amount in EGP
+
+US-2.3: SMS OTP for Digital Signature ✅ IMPLEMENTED
+As a User, I want to receive an SMS OTP to digitally sign my installment contract during checkout, so I don't have to deal with physical paperwork until delivery.
+
+Implementation Status: COMPLETED
+- SMS OTP verification for installment contracts
+- Egyptian phone number format validation (01XXXXXXXXX)
+- 6-digit OTP input with auto-focus and paste support
+- Contract summary display (monthly payment, duration, total)
+- 60-second resend countdown
+- Demo mode (code: 123456)
+- Legal binding notice
+- Integrated into checkout flow for installment payments
+
+Epic 3: Checkout & Logistics
+-----------------------------
+
+US-3.1: Store Pickup Selection ✅ IMPLEMENTED
+As a User, I want to choose "Store Pickup" and select a specific "Saber Store" branch (e.g., Nasr City Branch), so I can pick up my item on my way home.
+
+Implementation Status: COMPLETED
+- Choice between Home Delivery and Store Pickup
+- Store locations:
+  * Cairo - Nasr City Branch
+  * Giza - 6th October Branch
+  * Alexandria - City Center Branch
+- Free pickup option
+- Integrated into checkout flow
+
+US-3.2: Down Payment Online (PARTIAL)
+As a User, I want to pay only the Down Payment online (via Visa/Mastercard) and have the rest scheduled as installments, so I can secure the deal immediately.
+
+Implementation Status: PARTIAL
+- Installment payment option available
+- Shows monthly payment preview
+- Needs: Down payment calculation and split payment processing
+
+Epic 4: Admin & Operations
+---------------------------
+
+US-4.1: Interest Rate Management (PENDING)
+As an Admin, I want to set different Interest Rates for different product categories (e.g., 0% interest on Mobiles during a promo, but 5% on Fridges), so I can run targeted marketing campaigns.
+
+Implementation Status: PENDING - Phase 4
+
+US-4.2: KYC Approval Dashboard (PENDING)
+As a Credit Officer, I want a dashboard to view pending KYC documents (ID photos) and approve/reject Credit Limits, so users can start buying quickly.
+
+Implementation Status: PENDING - Phase 4
+
+Epic 5: Navigation & UX (NEW)
+------------------------------
+
+US-5.1: Mobile Navigation ✅ IMPLEMENTED
+As a Mobile User, I want to access the navigation menu easily on my phone, so I can browse categories without difficulty.
+
+Implementation Status: COMPLETED
+- Hamburger menu for mobile devices
+- Smooth slide-down animation
+- All categories accessible
+- Click outside to close
+
+US-5.2: Breadcrumb Navigation ✅ IMPLEMENTED
+As a User, I want to see where I am in the site hierarchy, so I can easily navigate back.
+
+Implementation Status: COMPLETED
+- Breadcrumbs on Checkout and Credit Check pages
+- Clickable navigation back to Home
+- Clean, minimal design
+
+US-5.3: Back Navigation ✅ IMPLEMENTED
+As a User, I want a clear way to go back to shopping from checkout, so I don't feel trapped in the checkout flow.
+
+Implementation Status: COMPLETED
+- "← Back to Shopping" button on checkout page
+- Returns user to home page
+- Preserves cart items
+
+===========================================
+3. ENTITY RELATIONSHIP DIAGRAM (ERD)
+===========================================
+
+This schema is designed to handle standard e-commerce features plus the complex installment logic.
+
+Key Tables & Logic
+------------------
+
+A. Users & Identity
+- Users: Stores standard info (Name, Email, Password Hash, Phone Number)
+- Profiles: Stores extended KYC info (National ID, Scanned ID URL, Monthly Salary, Employer)
+- CreditLimits: Tracks the user's "Saber Balance" (Total Limit, Used Limit, Remaining Limit)
+
+B. Catalog
+- Products: (Name, SKU, Base Price, Stock Quantity, Brand, Category, Warranty)
+- Categories: (Electronics, Large Appliances, Small Appliances, Mobiles, TVs, Air Conditioners)
+- InstallmentPlans: Defines the rules (e.g., "Standard Plan" = 24 months @ 20% interest; "Promo Plan" = 12 months @ 0% interest)
+
+C. Orders & Installments
+- Orders: The master record of the transaction
+- OrderItems: Which products were in the order
+- InstallmentContracts: Links an Order to a specific Installment Plan (with OTP verification status)
+- PaymentSchedule: The breakdown of payments (Due Date, Amount, Status: Paid/Overdue)
+
+D. NEW: Comparison & Filters (Frontend State - No DB Required)
+- Product comparison state (up to 3 products)
+- Budget filter preferences (user session)
+
+ERD Structure (Mermaid Syntax)
+--------------------------------
+
+erDiagram
+    USERS ||--|| PROFILES : "has"
+    USERS ||--|| CREDIT_LIMITS : "has"
+    USERS ||--o{ ORDERS : "places"
+
+    PRODUCTS ||--o{ ORDER_ITEMS : "included_in"
+    PRODUCTS }|--|| CATEGORIES : "belongs_to"
+
+    ORDERS ||--o{ ORDER_ITEMS : "contains"
+    ORDERS ||--|| INSTALLMENT_CONTRACTS : "may_have"
+
+    INSTALLMENT_CONTRACTS }|--|| INSTALLMENT_PLANS : "uses_rules_from"
+    INSTALLMENT_CONTRACTS ||--o{ PAYMENT_SCHEDULE : "generates"
+
+    USERS {
+        int id PK
+        string full_name
+        string phone_number "Egyptian format 01XXXXXXXXX"
+        string password_hash
+        boolean is_verified
+        string governorate "Cairo, Giza, Alexandria, etc."
+    }
+
+    PROFILES {
+        int user_id FK
+        string national_id "14 digits"
+        string scanned_id_url
+        string utility_bill_url
+        decimal monthly_salary
+        string employer
+        string kyc_status "Pending/Approved/Rejected"
+        datetime kyc_submitted_at
+        datetime kyc_approved_at
+    }
+
+    CREDIT_LIMITS {
+        int user_id FK
+        decimal total_limit "Max credit allowed in EGP"
+        decimal current_balance "Amount owed in EGP"
+        decimal remaining_limit "Available credit in EGP"
+        string status "Active/Frozen/Suspended"
+        string approved_by
+        datetime approved_at
+    }
+
+    PRODUCTS {
+        int id PK
+        string name
+        decimal cash_price "Price in EGP"
+        decimal old_price "Discounted from price in EGP"
+        int stock_qty
+        string brand
+        string category
+        string warranty "e.g., 2 Years, 5 Years Compressor"
+        decimal rating
+        int review_count
+        json specs "Flexible specifications"
+        json badges "e.g., 0% Interest, Free Shipping"
+    }
+
+    CATEGORIES {
+        int id PK
+        string name "Mobiles, Large Appliances, etc."
+        string icon
+        int product_count
+    }
+
+    INSTALLMENT_PLANS {
+        int id PK
+        string name "e.g., Zero Interest 12M"
+        int duration_months "6, 12, 18, or 24"
+        decimal interest_rate "Percentage (0 for promotional)"
+        decimal min_down_payment "Percentage"
+        boolean is_active
+        json applicable_categories "Array of category IDs"
+    }
+
+    ORDERS {
+        int id PK
+        int user_id FK
+        datetime order_date
+        decimal total_amount "Total in EGP"
+        string status "Pending/Confirmed/Shipped/Delivered/Cancelled"
+        string delivery_method "delivery/pickup"
+        string delivery_address
+        string governorate
+        string pickup_branch "Nasr City/6th October/Alexandria"
+        string payment_method "card/fawry/wallet/installment"
+    }
+
+    ORDER_ITEMS {
+        int id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal price_at_purchase "Price in EGP at time of order"
+        int warranty_months
+    }
+
+    INSTALLMENT_CONTRACTS {
+        int id PK
+        int order_id FK
+        int user_id FK
+        int installment_plan_id FK
+        decimal total_financed_amount "Total in EGP"
+        decimal down_payment_amount "Down payment in EGP"
+        decimal monthly_payment_amount "Monthly in EGP"
+        date start_date
+        date end_date
+        datetime contract_signed_at
+        boolean otp_verified "TRUE if SMS OTP verified"
+        string otp_code "Hashed OTP for verification"
+        string phone_number "Phone used for OTP"
+        string status "Active/Completed/Defaulted/Cancelled"
+    }
+
+    PAYMENT_SCHEDULE {
+        int id PK
+        int contract_id FK
+        int installment_number "1, 2, 3... up to duration"
+        date due_date
+        decimal amount "Payment amount in EGP"
+        string status "Pending/Paid/Overdue/Late"
+        datetime paid_at
+        decimal paid_amount "Actual amount paid in EGP"
+        decimal late_fee "Late fee in EGP if applicable"
+    }
+
+===========================================
+4. TECHNICAL NOTES FOR DEVELOPERS
+===========================================
+
+Egyptian Market Specifics:
+- All monetary values in Egyptian Pounds (EGP)
+- Phone numbers: Egyptian format 01XXXXXXXXX (11 digits)
+- Governorates: Cairo, Giza, Alexandria, Dakahlia, etc.
+- Store branches: Real Egyptian locations
+
+Precision Handling:
+- Ensure all monetary values (decimal) are stored with high precision to avoid rounding errors in installment calculations
+- Use DECIMAL(10, 2) for all EGP amounts
+- Round monthly payments to nearest integer for display
+
+State Machine for Payment Schedule:
+- PAYMENT_SCHEDULE table needs a strict state machine
+- If a user misses a due_date, a cron job should automatically flip the status to Overdue
+- Potentially freeze the user's CREDIT_LIMITS on overdue payments
+- Send SMS reminders 3 days before due date
+
+OTP Verification Flow:
+1. User selects installment payment
+2. System generates 6-digit OTP
+3. SMS sent to user's registered Egyptian phone number
+4. User enters OTP within 60 seconds (or requests resend)
+5. Upon verification, contract is digitally signed
+6. OTP code stored hashed in INSTALLMENT_CONTRACTS
+
+Security Considerations:
+- Hash OTP codes before storing
+- Expire OTPs after 5 minutes
+- Limit resend attempts to prevent spam
+- Validate Egyptian phone number format
+- Sanitize all user inputs
+- Validate file uploads (ID, utility bills) - max 5MB, images only
+
+===========================================
+5. IMPLEMENTATION STATUS
+===========================================
+
+✅ Phase 1: Navigation Improvements (COMPLETED)
+- Back navigation in checkout
+- Breadcrumb navigation
+- Mobile hamburger menu
+
+✅ Phase 2: Missing PRD Features (COMPLETED)
+- Budget filter (US-1.2)
+- Product comparison (US-1.3)
+- SMS OTP verification (US-2.3)
+
+⏳ Phase 3: Complete ERD Implementation (PENDING)
+- TypeScript interfaces for all entities
+- Mock data for installment plans
+- Complete type definitions
+
+⏳ Phase 4: Admin Dashboard (PENDING)
+- KYC approval dashboard (US-4.2)
+- Interest rate management (US-4.1)
+
+⏳ Phase 5: Enhanced Checkout (PENDING)
+- Down payment split logic (US-3.2)
+- Enhanced store pickup with maps
+- Payment schedule preview
+
+===========================================
+6. DEMO CREDENTIALS & TEST DATA
+===========================================
+
+Demo OTP Code: 123456 (for testing SMS verification)
+Test Phone Numbers: 01012345678, 01234567890
+Store Branches:
+- Cairo - Nasr City Branch
+- Giza - 6th October Branch
+- Alexandria - City Center Branch
+
+Sample Products (all in EGP):
+- Samsung Galaxy S24 Ultra: 45,999 EGP (~1,917 EGP/month)
+- LG French Door Refrigerator: 89,999 EGP (~3,750 EGP/month)
+- Tornado Washing Machine: 18,999 EGP (~792 EGP/month)
+- Dell XPS 15 Laptop: 62,999 EGP (~2,625 EGP/month)
+- Samsung 65" QLED TV: 42,999 EGP (~1,792 EGP/month)
+- LG Split AC 2.25 HP: 24,999 EGP (~1,042 EGP/month)
+
+===========================================
+CHANGELOG
+===========================================
+
+Version 2.0 (Dec 24, 2024):
+- Added Phase 1 & 2 implementation status
+- Added Epic 5 for Navigation & UX features
+- Updated ERD with OTP verification fields
+- Added Egyptian market specifics throughout
+- Added demo credentials section
+- Expanded technical notes for developers
+- All features now in EGP currency
+
+Version 1.2 (Initial):
+- Original PRD with core user stories
+- Basic ERD structure

@@ -1,0 +1,11 @@
+node_modules
+.git
+*.log
+.env
+.env.local
+backend
+PRD&ERD
+draw.tldr
+Analysis.md
+NEXT_STEPS.md
+CURRENT_STATUS.md
