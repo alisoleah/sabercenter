@@ -1,7 +1,15 @@
 import rateLimit from 'express-rate-limit';
-
+import { securityLog } from '../config/logger';
 
 import redis from '../config/redis';
+
+// Helper to create a rate limit handler with logging
+const createHandler = (limitName: string) => {
+  return (req: any, res: any, next: any, options: any) => {
+    securityLog.rateLimitExceeded(req.ip, `${limitName}:${req.originalUrl}`);
+    res.status(options.statusCode).send(options.message);
+  };
+};
 
 /**
  * Standard API rate limiter
@@ -21,6 +29,7 @@ export const apiLimiter = rateLimit({
     const userAgent = req.get('user-agent') || 'unknown';
     return `${req.ip}-${userAgent}`;
   },
+  handler: createHandler('API'),
 });
 
 /**
@@ -44,6 +53,7 @@ export const authLimiter = rateLimit({
     const userAgent = req.get('user-agent') || 'unknown';
     return `auth:${req.ip}-${userAgent}`;
   },
+  handler: createHandler('Auth'),
 });
 
 /**
@@ -64,6 +74,7 @@ export const registrationLimiter = rateLimit({
   keyGenerator: (req) => {
     return `register:${req.ip}`;
   },
+  handler: createHandler('Registration'),
 });
 
 /**
@@ -86,6 +97,7 @@ export const otpLimiter = rateLimit({
     const phoneNumber = req.body?.phoneNumber || req.ip;
     return `otp:${phoneNumber}`;
   },
+  handler: createHandler('OTP'),
 });
 
 /**
@@ -105,6 +117,7 @@ export const passwordResetLimiter = rateLimit({
   keyGenerator: (req) => {
     return `reset:${req.ip}`;
   },
+  handler: createHandler('PasswordReset'),
 });
 
 /**
@@ -126,6 +139,7 @@ export const uploadLimiter = rateLimit({
     const userId = (req as any).user?.id || req.ip;
     return `upload:${userId}`;
   },
+  handler: createHandler('Upload'),
 });
 
 /**
@@ -146,6 +160,7 @@ export const adminLimiter = rateLimit({
     const userId = (req as any).user?.id || req.ip;
     return `admin:${userId}`;
   },
+  handler: createHandler('Admin'),
 });
 
 /**
@@ -166,6 +181,7 @@ export const orderLimiter = rateLimit({
     const userId = (req as any).user?.id || req.ip;
     return `order:${userId}`;
   },
+  handler: createHandler('Order'),
 });
 
 // Export Redis instance for use in other services

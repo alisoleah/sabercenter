@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import kycService from '../services/kyc.service';
+import { validateImageMagicBytes } from '../utils/fileValidation';
 
 export class KycController {
   /**
@@ -19,6 +20,14 @@ export class KycController {
         return res.status(400).json({
           success: false,
           message: 'Invalid document type. Must be "id" or "bill".',
+        });
+      }
+
+      // Validate file magic bytes
+      if (!validateImageMagicBytes(req.file.buffer)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid file format. Only JPG, PNG, WEBP, and GIF images are allowed.',
         });
       }
 
