@@ -1,53 +1,52 @@
-import redis from '../config/redis';
+import Redis from 'ioredis';
+import config from '../config/config';
+import logger from '../config/logger';
 
-/**
- * Service to manage token blacklisting
- * Used for user logout to invalidate tokens before their expiration
- */
+// Create a dedicated Redis client for the blacklist to avoid conflicts
+const redis = new Redis(config.redis.url);
+
+redis.on('error', (err) => {
+    logger.error('Redis Client Error (Blacklist)', err);
+});
+
+redis.on('connect', () => {
+    logger.info('Connected to Redis for Token Blacklist');
+});
+
 export class TokenBlacklistService {
-    private static readonly PREFIX = 'blacklist:';
+    private static readonly PREFIX = 'bl:';
 
     /**
-     * Add a token to the blacklist
-     * @param token The JWT token to blacklist
-     * @param expiresInSeconds Time until the token expires in seconds
+     * Add token to blacklist
+     * @param token JWT token string
+     * @param expiresInSeconds Time until token expires
      */
     static async addToBlacklist(token: string, expiresInSeconds: number): Promise<void> {
-        if (!redis) {
-            console.warn('Redis not available, cannot blacklist token');
-            return;
-        }
+        if (!token) return;
 
         try {
-            const key = `${this.PREFIX}${token}`;
+            const key = this.PREFIX + token;
             await redis.set(key, '1', 'EX', expiresInSeconds);
+            logger.info(`Token blacklisted for ${expiresInSeconds}s`);
         } catch (error) {
-            console.error('Error blacklisting token:', error);
+            logger.error('Failed to blacklist token', error);
         }
     }
 
     /**
-     * Check if a token is blacklisted
-     * @param token The JWT token to check
+     * Check if token is blacklisted
+     * @param token JWT token string
      */
     static async isBlacklisted(token: string): Promise<boolean> {
-        if (!redis) {
-            // Fail open if Redis is down (allow request) - or could fail closed depending on security requirements
-            // Security focused: fail closed (return true)
-            // Availability focused: fail open (return false)
-            // Given we are in "Security Hardening" phase, let's log and return false strictly for now to avoid locking everyone out if Redis flakiness,
-            // but in high security it should probably reject.
-            // However, considering this is a "Blacklist", if the list is unavailable, we cannot check it.
-            return false;
-        }
+        if (!token) return false;
 
         try {
-            const key = `${this.PREFIX}${token}`;
+            const key = this.PREFIX + token;
             const result = await redis.get(key);
             return result === '1';
         } catch (error) {
-            console.error('Error checking token blacklist:', error);
-            return false;
+            logger.error('Failed to check blacklist', error);
+            return false; // Fail open
         }
     }
 }

@@ -2,7 +2,8 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import { doubleCsrf } from 'csrf-csrf';
+// import { doubleCsrf } from 'csrf-csrf'; // Removed unused import
+import { csrfProtection, generateCsrfToken } from './middleware/csrf.middleware';
 import path from 'path';
 import { connectDatabase } from './config/database';
 import config from './config/config';
@@ -74,26 +75,7 @@ app.use(cors({
 // CSRF Configuration
 
 
-const csrfConfig = doubleCsrf({
-  getSecret: () => process.env.JWT_SECRET || 'secret',
-  cookieName: 'x-csrf-token',
-  getSessionIdentifier: (_req: any) => "stateless-session",
-  cookieOptions: {
-    sameSite: 'lax',
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-  },
-  size: 64,
-  ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-  getCsrfTokenFromRequest: (req: any) => req.headers['x-csrf-token'],
-});
-
-console.log('Available CSRF functions:', Object.keys(csrfConfig));
-
-const {
-  doubleCsrfProtection: _doubleCsrfProtection, // Reserved for future CSRF protection
-  generateCsrfToken
-} = csrfConfig as any;
+// Old CSRF config removed
 
 // Body Parsers - must come before CSRF protection
 app.use(express.json());
@@ -114,6 +96,10 @@ app.get('/api/csrf-token', (req, res) => {
   const csrfToken = generateCsrfToken(req, res);
   res.json({ csrfToken });
 });
+
+// Apply CSRF protection to all mutation routes (POST, PUT, DELETE, PATCH)
+// Exclude specific paths if necessary (e.g. webhooks)
+app.use(csrfProtection);
 
 // Serve static files (uploaded images) with CORS headers
 app.use('/uploads', (_req, res, next) => {

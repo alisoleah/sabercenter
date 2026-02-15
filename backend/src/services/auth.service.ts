@@ -141,13 +141,13 @@ export class AuthService {
     const accessToken = jwt.sign(
       { userId, role },
       config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
     );
 
     const refreshToken = jwt.sign(
       { userId, role },
       config.jwtRefreshSecret,
-      { expiresIn: config.jwtRefreshExpiresIn }
+      { expiresIn: config.jwtRefreshExpiresIn } as jwt.SignOptions
     );
 
     return {
