@@ -17,6 +17,7 @@ try {
       }
       return Math.min(times * 100, 3000);
     },
+    enableOfflineQueue: false,
   });
 
   redis.on('error', (err) => {

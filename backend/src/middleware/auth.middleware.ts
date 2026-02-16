@@ -58,7 +58,10 @@ export function requireRole(...roles: string[]) {
       });
     }
 
-    if (!roles.includes(user.role)) {
+    const userRole = user.role.toLowerCase();
+    const requiredRoles = roles.map(r => r.toLowerCase());
+
+    if (!requiredRoles.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions',

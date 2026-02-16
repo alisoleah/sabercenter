@@ -14,7 +14,7 @@ export class ProductsService {
    * Helper: Transform product images to include backend URL
    */
   private transformProductImages(product: any) {
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3003';
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
 
     // Transform main imageUrl
     if (product.imageUrl && !product.imageUrl.startsWith('http')) {

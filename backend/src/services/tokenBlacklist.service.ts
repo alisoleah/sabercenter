@@ -3,7 +3,15 @@ import config from '../config/config';
 import logger from '../config/logger';
 
 // Create a dedicated Redis client for the blacklist to avoid conflicts
-const redis = new Redis(config.redis.url);
+const redis = new Redis(config.redis.url, {
+    retryStrategy: (times) => {
+        if (times > 3) {
+            return null; // Stop retrying
+        }
+        return Math.min(times * 100, 3000);
+    },
+    enableOfflineQueue: false,
+});
 
 redis.on('error', (err) => {
     logger.error('Redis Client Error (Blacklist)', err);

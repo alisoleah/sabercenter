@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { bannersApi, Banner } from '../api/banners.api';
 
@@ -7,23 +8,29 @@ export function HeroSlider() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { t, i18n } = useTranslation();
+
   useEffect(() => {
     fetchBanners();
-  }, []);
+  }, [i18n.language]);
 
   const fetchBanners = async () => {
     try {
       const data = await bannersApi.getActiveBanners();
+      // If we had a real backend with multi-language support, we would pass the language param
+      // or the backend would return localized data. 
+      // For now, if no data or we want to force fallback to test translations:
+      if (!data || data.length === 0) throw new Error('No banners found');
       setBanners(data);
     } catch (error) {
       console.error('Failed to fetch banners:', error);
-      // Fallback to default banner if API fails
+      // Fallback to localized default banner
       setBanners([
         {
           id: '1',
-          title: 'Welcome to SaberStore',
-          subtitle: 'Your trusted e-commerce partner',
-          ctaText: 'Shop Now',
+          title: t('hero.title'),
+          subtitle: t('hero.subtitle'),
+          ctaText: t('hero.cta'),
           ctaLink: '/products',
           imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=1920&q=80',
           bgGradient: 'from-[#003366] to-[#004488]',

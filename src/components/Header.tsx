@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, User, Phone, MapPin, Search, Menu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { productsApi } from '../api/products.api';
 import { Product } from '../types';
+import { LanguageToggle } from './LanguageToggle';
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -16,6 +18,7 @@ interface HeaderProps {
 }
 
 export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUser, onLogout, onProductClick, onAdminClick, onShopClick, onCategoryClick }: HeaderProps) {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -24,13 +27,13 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
   const searchRef = useRef<HTMLDivElement>(null);
 
   const categories = [
-    'Large Appliances',
-    'Small Appliances',
-    'Mobiles',
-    'Laptops',
-    'TVs',
-    'Air Conditioners',
-    'Flash Deals'
+    { key: 'nav.large_appliances', value: 'Large Appliances' },
+    { key: 'nav.small_appliances', value: 'Small Appliances' },
+    { key: 'nav.mobiles', value: 'Mobiles' },
+    { key: 'nav.laptops', value: 'Laptops' },
+    { key: 'nav.tvs', value: 'TVs' },
+    { key: 'nav.air_conditioners', value: 'Air Conditioners' },
+    { key: 'nav.flash_deals', value: 'Flash Deals' }
   ];
 
   // Search with debouncing
@@ -91,14 +94,15 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
       <div className="border-b border-white/10">
         <div className="container mx-auto px-4 py-2">
           <div className="flex justify-between items-center">
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex gap-4 items-center">
+              <LanguageToggle />
+              <div className="hidden sm:flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">16000</span>
+                <span className="text-sm">{t('common.phone')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                <span className="text-sm">Find Store</span>
+                <span className="text-sm">{t('common.find_store')}</span>
               </div>
             </div>
             <div className="flex gap-4">
@@ -109,25 +113,25 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
                     <span className="hidden md:inline font-medium">{currentUser.name}</span>
                   </div>
                   {/* Option B: Admin Panel button (visible for admins) */}
-                  {currentUser.role === 'admin' && (
+                  {(currentUser.role === 'admin' || currentUser.role === 'ADMIN') && (
                     <button
                       onClick={onAdminClick}
                       className="text-sm bg-[#FF6600] hover:bg-[#FF6600]/90 transition-colors px-3 py-1 rounded-lg font-medium"
                     >
-                      Admin Panel
+                      {t('common.admin_panel')}
                     </button>
                   )}
                   <button
                     onClick={onLogout}
                     className="text-sm hover:text-[#FF6600] transition-colors px-3 py-1 rounded-lg border border-white/20 hover:border-[#FF6600]"
                   >
-                    Logout
+                    {t('common.logout')}
                   </button>
                 </div>
               ) : (
                 <button onClick={onLoginClick} className="text-sm hover:text-[#FF6600] transition-colors flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  <span className="hidden md:inline">Login / Register</span>
+                  <span className="hidden md:inline">{t('common.login')}</span>
                 </button>
               )}
             </div>
@@ -157,15 +161,15 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
               <form onSubmit={handleSearchSubmit} className="flex items-center w-full">
                 <input
                   type="text"
-                  placeholder="Search for products, brands..."
-                  className="flex-1 px-4 py-2 rounded-l-lg outline-none text-[#1A1A1A]"
+                  placeholder={t('common.search')}
+                  className="flex-1 px-4 py-2 rounded-l-lg outline-none text-[#1A1A1A] rtl:rounded-r-lg rtl:rounded-l-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
                 />
                 <button
                   type="submit"
-                  className="bg-[#FF6600] px-6 py-2 rounded-r-lg hover:bg-[#FF6600]/90 transition-colors"
+                  className="bg-[#FF6600] px-6 py-2 rounded-r-lg hover:bg-[#FF6600]/90 transition-colors rtl:rounded-l-lg rtl:rounded-r-none"
                   disabled={isSearching}
                 >
                   <Search className="w-5 h-5" />
@@ -176,7 +180,7 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
               {showResults && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
                   {isSearching ? (
-                    <div className="p-4 text-center text-gray-500">Searching...</div>
+                    <div className="p-4 text-center text-gray-500">{t('common.loading')}</div>
                   ) : searchResults.length > 0 ? (
                     <div className="py-2">
                       {searchResults.map((product) => (
@@ -213,11 +217,11 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
           >
             <ShoppingCart className="w-5 h-5" />
             {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#00C851] text-white rounded-full w-6 h-6 flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-[#00C851] text-white rounded-full w-6 h-6 flex items-center justify-center rtl:right-auto rtl:-left-2">
                 {cartItemCount}
               </span>
             )}
-            <span className="hidden md:inline">Cart</span>
+            <span className="hidden md:inline">{t('common.cart')}</span>
           </button>
         </div>
       </div>
@@ -227,10 +231,10 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
         <div className="flex items-center bg-white rounded-lg">
           <input
             type="text"
-            placeholder="Search..."
-            className="flex-1 px-4 py-2 rounded-l-lg outline-none text-[#1A1A1A]"
+            placeholder={t('common.search')}
+            className="flex-1 px-4 py-2 rounded-l-lg outline-none text-[#1A1A1A] rtl:rounded-r-lg rtl:rounded-l-none"
           />
-          <button className="bg-[#FF6600] px-4 py-2 rounded-r-lg">
+          <button className="bg-[#FF6600] px-4 py-2 rounded-r-lg rtl:rounded-l-lg rtl:rounded-r-none">
             <Search className="w-5 h-5" />
           </button>
         </div>
@@ -242,12 +246,12 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
           <div className="flex items-center gap-6 overflow-x-auto py-3">
             {categories.map((category, index) => (
               <button
-                key={category}
-                onClick={() => onCategoryClick?.(category)}
+                key={category.key}
+                onClick={() => onCategoryClick?.(category.value)}
                 className={`text-sm whitespace-nowrap hover:text-[#FF6600] transition-colors bg-transparent border-0 cursor-pointer ${index === categories.length - 1 ? 'text-[#FF6600]' : ''
                   }`}
               >
-                {category}
+                {t(category.key)}
               </button>
             ))}
           </div>
@@ -261,15 +265,15 @@ export function Header({ cartItemCount = 0, onCartClick, onLoginClick, currentUs
             <div className="flex flex-col gap-3">
               {categories.map((category, index) => (
                 <button
-                  key={category}
+                  key={category.key}
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    onCategoryClick?.(category);
+                    onCategoryClick?.(category.value);
                   }}
                   className={`text-sm py-2 px-4 rounded-lg hover:bg-white/10 transition-colors text-left bg-transparent border-0 cursor-pointer ${index === categories.length - 1 ? 'text-[#FF6600] bg-white/5' : ''
                     }`}
                 >
-                  {category}
+                  {t(category.key)}
                 </button>
               ))}
             </div>

@@ -31,7 +31,7 @@ export class BannersService {
             ...banner,
             imageUrl: banner.imageUrl.startsWith('http')
                 ? banner.imageUrl
-                : `${process.env.BACKEND_URL || 'http://localhost:3003'}${banner.imageUrl}`,
+                : `${process.env.BACKEND_URL || 'http://localhost:3000'}${banner.imageUrl}`,
         }));
     }
 

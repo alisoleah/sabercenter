@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HeroSlider } from './components/HeroSlider';
@@ -29,6 +30,8 @@ const Breadcrumbs = ({
   page: Page;
   onNavigate: (page: Page) => void;
 }) => {
+  const { t } = useTranslation();
+
   if (page === 'home') return null;
 
   return (
@@ -39,11 +42,11 @@ const Breadcrumbs = ({
             onClick={() => onNavigate('home')}
             className="text-[#003366] hover:text-[#FF6600] transition-colors"
           >
-            Home
+            {t('common.home')}
           </button>
-          <span className="text-[#666666]">/</span>
+          <span className="text-[#666666] rtl:rotate-180">/</span>
           <span className="text-[#1A1A1A] font-medium">
-            {page === 'credit-check' ? 'Credit Check' : page === 'admin' ? 'Admin Dashboard' : page === 'banners' ? 'Banner Management' : page === 'category' ? 'Category' : 'Checkout'}
+            {page === 'credit-check' ? t('home.check_credit_limit') : page === 'admin' ? t('common.admin_panel') : page === 'banners' ? 'Banner Management' : page === 'category' ? t('common.categories') : 'Checkout'}
           </span>
         </div>
       </div>
@@ -52,6 +55,13 @@ const Breadcrumbs = ({
 };
 
 export default function App() {
+  const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    document.dir = i18n.dir();
+    document.documentElement.lang = i18n.language;
+  }, [i18n, i18n.language]);
+
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -241,7 +251,7 @@ export default function App() {
               <div className="bg-gradient-to-r from-[#003366] to-[#0055AA] rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <p className="text-white font-medium">
-                    {compareProducts.length} product{compareProducts.length !== 1 ? 's' : ''} selected for comparison
+                    {t('home.compare_selected', { count: compareProducts.length, plural: compareProducts.length !== 1 ? 's' : '' })}
                   </p>
                   <div className="flex gap-2">
                     {compareProducts.map((product) => (
@@ -265,21 +275,21 @@ export default function App() {
                   disabled={compareProducts.length < 2}
                   className="bg-[#FF6600] hover:bg-[#FF6600]/90 disabled:bg-[#666666] text-white px-6 py-2 rounded-lg transition-colors disabled:cursor-not-allowed"
                 >
-                  Compare Now
+                  {t('home.compare_now')}
                 </button>
               </div>
             )}
 
             {/* Category Grid */}
             <section>
-              <h2 className="text-[#003366] mb-6">Shop by Category</h2>
+              <h2 className="text-[#003366] mb-6">{t('home.shop_by_category')}</h2>
               <CategoryGrid onCategorySelect={handleCategorySelect} />
             </section>
 
             {/* Flash Deals Section */}
             <section>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[#003366]">⚡ Flash Deals</h2>
+                <h2 className="text-[#003366]">{t('home.flash_deals')}</h2>
                 <CountdownTimer />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -308,20 +318,20 @@ export default function App() {
 
             {/* Best Selling Installment Deals */}
             <section>
-              <h2 className="text-[#003366] mb-6">💰 Best Installment Deals</h2>
+              <h2 className="text-[#003366] mb-6">{t('home.best_installment_deals')}</h2>
               {budgetFilter > 0 && filteredProducts.length === 0 && (
                 <div className="bg-[#F0F4F8] rounded-lg p-12 text-center">
                   <p className="text-[#666666] mb-2">
-                    No products found within your budget
+                    {t('home.no_products_budget')}
                   </p>
                   <p className="text-[#666666] text-sm mb-4">
-                    Try increasing your monthly budget or browse all products
+                    {t('home.try_increasing_budget')}
                   </p>
                   <button
                     onClick={() => setBudgetFilter(0)}
                     className="bg-[#003366] hover:bg-[#003366]/90 text-white px-6 py-2 rounded-lg transition-colors"
                   >
-                    Show All Products
+                    {t('home.show_all_products')}
                   </button>
                 </div>
               )}
@@ -352,15 +362,15 @@ export default function App() {
             {/* CTA Banner */}
             <section>
               <div className="bg-gradient-to-r from-[#003366] to-[#004488] rounded-lg p-12 text-center text-white">
-                <h2 className="text-white mb-4">Get Your Credit Limit Now!</h2>
+                <h2 className="text-white mb-4">{t('home.get_credit_limit')}</h2>
                 <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-                  Complete your KYC verification in minutes and unlock 0% installment plans on all products
+                  {t('home.kyc_message')}
                 </p>
                 <button
                   onClick={() => setCurrentPage('credit-check')}
                   className="bg-[#FF6600] hover:bg-[#FF6600]/90 text-white px-8 py-3 rounded-lg transition-colors"
                 >
-                  Check Credit Limit
+                  {t('home.check_credit_limit')}
                 </button>
               </div>
             </section>
@@ -373,7 +383,7 @@ export default function App() {
               onClick={() => setCurrentPage('home')}
               className="mb-6 text-[#003366] hover:text-[#FF6600] transition-colors"
             >
-              ← Back to Home
+              {t('home.back_home')}
             </button>
             <CreditLimitChecker />
           </div>
@@ -403,7 +413,7 @@ export default function App() {
                 onClick={() => setCurrentPage('home')}
                 className="text-[#003366] hover:text-[#FF6600] transition-colors"
               >
-                ← Back to Home
+                {t('home.back_home')}
               </button>
             </div>
 
@@ -428,8 +438,8 @@ export default function App() {
                         }`}
                     >
                       {compareProducts.find((p) => p.id === product.id)
-                        ? '✓ Added'
-                        : '+ Compare'}
+                        ? t('home.added')
+                        : t('home.add_compare')}
                     </button>
                   </div>
                 ))}
@@ -438,8 +448,8 @@ export default function App() {
                 (activeCategory === 'Flash Deals' && (p.oldPrice || 0) > p.cashPrice)
               )).length === 0 && (
                   <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-lg">
-                    <p className="text-xl">No products found in this category.</p>
-                    <button onClick={() => setCurrentPage('home')} className="mt-4 text-[#FF6600] underline">Go Back Home</button>
+                    <p className="text-xl">{t('home.no_products_category')}</p>
+                    <button onClick={() => setCurrentPage('home')} className="mt-4 text-[#FF6600] underline">{t('home.go_back_home')}</button>
                   </div>
                 )}
             </div>
@@ -486,7 +496,7 @@ export default function App() {
             console.log('Current user set to:', user);
             setShowLogin(false);
             // Option A: Auto-redirect admin to dashboard
-            if (user.role === 'admin') {
+            if (user.role === 'admin' || user.role === 'ADMIN') {
               console.log('Admin detected - navigating to dashboard');
               setCurrentPage('admin');
             }

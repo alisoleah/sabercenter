@@ -28,21 +28,9 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
   };
 
   const validatePassword = (password: string) => {
-    // Backend requires: min 12 chars, uppercase, lowercase, number, special char
-    if (password.length < 12) {
-      return 'Password must be at least 12 characters';
-    }
-    if (!/[A-Z]/.test(password)) {
-      return 'Password must contain at least one uppercase letter';
-    }
-    if (!/[a-z]/.test(password)) {
-      return 'Password must contain at least one lowercase letter';
-    }
-    if (!/[0-9]/.test(password)) {
-      return 'Password must contain at least one number';
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return 'Password must contain at least one special character';
+    // Relaxed validation for dev/testing
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
     }
     return null;
   };
@@ -255,7 +243,7 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
               )}
               {mode === 'register' && (
                 <p className="text-[#666666] text-xs mt-1">
-                  Min 12 chars with uppercase, lowercase, number, and special character
+                  Min 6 characters
                 </p>
               )}
             </div>
